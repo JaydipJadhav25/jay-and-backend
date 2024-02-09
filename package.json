@@ -5,8 +5,7 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-      "dev" : "nodemon src/index.js"
-
+    "dev": "nodemon src/index.js"
   },
   "keywords": [
     "jay"
@@ -14,6 +13,7 @@
   "author": "jaydip dhananjay jadhav",
   "license": "ISC",
   "devDependencies": {
-    "nodemon": "^3.0.3"
+    "nodemon": "^3.0.3",
+    "prettier": "^3.2.5"
   }
 }
