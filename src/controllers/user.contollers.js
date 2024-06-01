@@ -3,6 +3,10 @@ import {Apiresponse} from "../utils/apliresponse.js"
 import {user}  from "../models/user.model.js"
 // import users  from "../models/user.model.js"
 import {uploadfileoncloudinary} from "../utils/cloudinary.js"
+import JsonWebTokenError from "jsonwebtoken"
+const secretkeyofrefrectoken ="jayandbackend";
+
+
 
 
 
@@ -337,9 +341,249 @@ res
 
 
 }
+
+const refrecaccesstoken = async(req , res) =>{
+try {
+
+
+//usinng refresh token  new created access token
+//karan refresh token validiti long time aste v te database made
+// stor kel ahe so mg access token short lived ast tya prt new krnyashi refresh token use krtata
+
+//stpes : 
+// refresh token cookies mdhun ghene
+//te jwt kadun verify krane 
+//ok asel tr user find krene 
+//user fine zalya vr uder kdil v alele refresh token same ahe ka te checka krane
+//mg genrat new refresh and access tokem
+// send and set cookies ans reposnes 
+
+
+
+    const incomingrefrectoken = req.cookies.refrecestoken || req.body.refrecestoken
+       if(!incomingrefrectoken){
+        res.json({
+            massage : "unauthorized request"
+        })
+       }
+    
+    const decodedtoken =  JsonWebTokenError.verify(incomingrefrectoken , secretkeyofrefrectoken)
+    
+    
+    const exuser = await user.findById(decodedtoken._id)
+    
+    if(!exuser){
+        res.json({
+            massage : "invalide token"
+        })
+       }
+    
+       if(incomingrefrectoken != user.refrecestoken){
+        res.json({
+            massage : "invalid refrecs token"
+        })
+       }
+    
+    
+    const {refreshtoken , accesstoken} =await genratAccesstokenAndRefershToken(exuser._id);
+    
+    const option = {
+        httpOnly : true,
+        secure : true
+        
+    }
+    
+         res
+        .status(200)
+        .cookie("refrecstoken" , refreshtoken  , option)
+        .cookie("accesstoken" , accesstoken , option)
+        .cookie("demo" , 1000)
+        .json({
+            massage : "Access token Refreshed,,,,,,,,,,,,,,",
+            refrecestoken : refreshtoken,
+            accestoken : accesstoken,
+        })
+        
+} catch (error) {
+
+    console.log("fail process to refres access token....." , error)
+    
+}
+
+}
+
+const changePassword = async(req, res) =>{
+//algo :
+// apn verifyjwt middleawar use kelya mule aplya la user mile req made
+//user mdhun new passwor ghetlaa a old password ghetla
+//current user req,user madun ghetla 
+//current user passs v old password same chek kela 
+//ok asel tr newpass set kra allowed kel
+//new password update kela 
+//res done send kela 
+
+const {oldpassword , newpassword} = req.body;
+
+console.log("newpassword , oldpasswor : " , newpassword  , oldpassword)
+
+
+//req mdhun user kadane 
+
+const exuser = req.user;
+
+const  currentuser = await user.findById(exuser._id);
+
+//check
+const ispassword = await currentuser.ispasswordcorrect(oldpassword)
+
+if(!ispassword){
+    res.json({
+        massage : "password is wrong"
+    })
+
+}
+
+//ok ahe pass set new pass
+
+user.password = newpassword;
+
+ await currentuser.save({
+    validateBeforsave :false
+ })
+
+
+ res.json({
+    massage : "successfully password changed................."
+ })
+ .status(200)
+
+
+
+}
+
+const currentuser = async(req, res) =>{
+  const exuser = req.user 
+
+  const currentuser = await user.findById(exuser._id).select("-password -refreshtoken")
+
+  res.json({
+    massage : " current user finded.............",
+    currentuser
+  })
+  .status(202)
+
+
+}
+
+const updateAccountDetails = async(req, res) => {
+
+
+    const{ fullname , email} = req.body;
+    console.log("fullanme and email : " , fullname  , email);
+
+    if(!fullname ){
+        res.json({
+            massage : "fullname fields are requried"
+        })
+    }
+    if(!email ){
+        res.json({
+            massage : "email fields are requried"
+        })
+    }
+
+    // const exuser = await user.findById(req.user._id); he ahe bache ka kam
+
+
+    //old email and fullname kadu 
+    const olduser = await user.findById(req.user._id );
+
+    //mentos zindhagi
+    const exuser = await user.findByIdAndUpdate(req.user._id , {
+        $set :{
+            fullname,
+            email
+        }
+    },
+{
+    new : true
+
+}).select("-password")
+
+res.json({
+    massage : "update Account Detailes ....................",
+    oldemail : olduser.email,
+    exuser
+})
+.status(202)
+
+
+}
+
+
+const updateUserAvatar = async(req , res) => {
+
+    //user kdun new file ghetli multer  chya help ne 
+    //ani yekch avate ghenare so file use kel js more than one asel tr files kel ast
+    const avtarlocalpathnew = req.file?.path;
+    console.log("avatarloacal ptha : ",avtarlocalpathnew)
+    if(!avtarlocalpathnew){
+        res.json({
+            massage :  "aavtar file is missing........."
+        })
+    }
+
+    //file la cloudinary vr upload kru v url new update kru
+
+    const newavatar = await uploadfileoncloudinary(avtarlocalpathnew);
+    console.log("new avatar : " , newavatar)
+
+
+    if(!newavatar){
+        res.json({
+            massage :  "aavtar file is uploading error........."
+        })
+    }
+
+    //update in user account
+
+    const exuer = await user.findOneAndUpdate(
+        req.user._id ,
+        {
+            $set :{
+                avatar : newavatar.url
+            }
+        },
+        {
+            new :true
+        }
+    ).select("-password")
+
+
+    res.json({
+        massage : "update avatar successfully..........",
+        newavatar : newavatar.url
+    })
+    .status(200)
+
+
+
+
+    
+
+
+
+
+}
+
 export {
     registeruser,
     logineduser,
-    logoutuser
+    logoutuser,
+    refrecaccesstoken,
+    changePassword,
+    currentuser,
+    updateAccountDetails,
+    updateUserAvatar
 
 }

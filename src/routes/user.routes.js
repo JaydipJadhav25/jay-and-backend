@@ -1,5 +1,5 @@
 import  Router  from "express";
-import { logineduser, registeruser, logoutuser } from "../controllers/user.contollers.js";
+import { logineduser, registeruser, logoutuser , refrecaccesstoken, changePassword, currentuser, updateAccountDetails, updateUserAvatar} from "../controllers/user.contollers.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { verifyjwt } from "../middlewares/auth.middlewar.js";
 
@@ -17,6 +17,10 @@ router.get("/" , (req , res) => {
 // })
 
 
+//user all
+
+
+//user rgiester
 router.route("/register").post(
     upload.fields(
         [{
@@ -30,11 +34,34 @@ router.route("/register").post(
     ),
     registeruser)
 
+
 //login user   
  router.route("/login").post(logineduser)
-
+ 
  //logout user   
  router.route("/logout").post( verifyjwt , logoutuser)
+
+//refresh - accesstoken
+router.route("/refresh-accesstoken").post(verifyjwt, refrecaccesstoken)
+
+//changing password
+router.route("/changepassword").post(verifyjwt, changePassword)
+
+//current user info
+router.route("/currentuser").get(verifyjwt, currentuser)
+
+// update Account details
+router.route("/updateaccountdetails").post(verifyjwt, updateAccountDetails)
+
+//update avatar 
+//patch use kel karan aplyala all data updat kraycha nhi specific data update kraychay
+//post methode all documeant update krto
+//most iiiimmmmpppppp.......................
+//apn user krun file ghenare so multer middleaer use kel ani yek file ghenare so single ani 
+//jar more than one ghenare tr fields done.........
+router.route("/avatar").patch(verifyjwt,upload.single("avatar") , updateUserAvatar)
+
+
 
 
 export default router ;
