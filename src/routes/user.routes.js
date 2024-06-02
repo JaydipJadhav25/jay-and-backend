@@ -1,5 +1,5 @@
 import  Router  from "express";
-import { logineduser, registeruser, logoutuser , refrecaccesstoken, changePassword, currentuser, updateAccountDetails, updateUserAvatar} from "../controllers/user.contollers.js";
+import { logineduser, registeruser, logoutuser , refrecaccesstoken, changePassword, currentuser, updateAccountDetails, updateUserAvatar, getUserChanelProfile, getWatchHistory} from "../controllers/user.contollers.js";
 import { upload } from "../middlewares/multer.middlewares.js";
 import { verifyjwt } from "../middlewares/auth.middlewar.js";
 
@@ -62,7 +62,11 @@ router.route("/updateaccountdetails").post(verifyjwt, updateAccountDetails)
 router.route("/avatar").patch(verifyjwt,upload.single("avatar") , updateUserAvatar)
 
 
+//get user channel profile 
+router.route("/c/:username").get(verifyjwt, getUserChanelProfile)
 
+// watch history
+router.route("/history").get(verifyjwt , getWatchHistory)
 
 export default router ;
 // export {router}

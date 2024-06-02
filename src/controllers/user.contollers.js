@@ -4,7 +4,10 @@ import {user}  from "../models/user.model.js"
 // import users  from "../models/user.model.js"
 import {uploadfileoncloudinary} from "../utils/cloudinary.js"
 import JsonWebTokenError from "jsonwebtoken"
+import mongoose from "mongoose"
 const secretkeyofrefrectoken ="jayandbackend";
+
+
 
 
 
@@ -576,6 +579,167 @@ const updateUserAvatar = async(req , res) => {
 
 }
 
+const getUserChanelProfile = async(req, res) =>{
+
+    //param madhun info yenar end point la  hit 
+    //kelya vr 
+
+    const{username} = req.params;
+
+    if(!username?.trim()){
+        res.json({
+            massagr : "usernme is missing...."
+        })
+    }
+
+    //bache ka kam
+    // await user.findById(username)
+
+    //aggregation papiline kde match file asto
+   
+     const channel = await user.aggregate([
+        {
+            $match :{
+                username : username?.toLowerCase()
+            }
+        },
+        {
+            //aple subscriber miltil
+            $lookup :{
+                from :"subsciptions",//ya model made
+                localField:"_id",//id vr select kra id pahije
+                 foreignField:"channel", // ya mdhun , channel select kra
+                 as : "subscribers" //name dil
+            }
+        },
+        {
+            //apn kiti janana subscrib kel te kadu
+            //yat all document yetat
+            $lookup :{
+                from :"subsciptions",
+                localField :"_id",
+                foreignField :"subcriber",
+                as :"subscribedTo"
+            }
+        },
+        {
+            $addFields :{
+                subscribercount :{
+                    $size : "$subscribers"
+                },
+                channelsubscribedtocount :{
+                    $size : "$subscribedTo"
+                },
+                isSubscribed :{
+                    $cond :{
+                        if :{$in :[req.user?._id ,"$subscribers.subscriber" ]},
+                        then :true,
+                        else :false
+                    }
+
+                }
+            }
+        },
+        {
+            //selected info ft pass kru shakto frontend la
+            $project :{
+              fullname :1,
+              email :1,
+              username :1,
+              subscribercount :1,
+              channelsubscribedtocount :1,
+              isSubscribed :1 ,
+              avatar :1
+            }
+        }
+     ])
+
+console.log("channel respones : " , channel)
+
+     if(!channel?.length){
+        res.json({
+            massage : " channel does nor exits..."
+        })
+     }
+
+     res.status(200)
+     .json({
+        massage : "user channel fetched successfully........",
+        channel :channel[0]
+     })
+
+}
+
+
+const getWatchHistory = async(req, res) => {
+  const exuser =await user.aggregate([
+    {
+        $match :{
+            _id : new mongoose.Types.ObjectId(req.user._id)
+
+        }
+    },
+    {
+        $lookup :{
+            from : "videos",
+            localField : "watchHistory",
+            foreignField :"_id",
+            as  : "watchHistory",
+            pipeline :[
+               
+                      {
+                    $lookup :{
+                        from : "users",
+                        localField : "owner",
+                        foreignField :"_id",
+                        as  : "owner",
+                         pipeline :[
+                        {
+                            $project :{
+                               fullname : 1,
+                               email : 1 ,
+                               avatar : 1 ,
+                               username : 1
+
+                                }
+                        }
+                    
+                    ]
+                  }
+                },
+                {
+                    $addFields : {
+                        owner : {
+                            $first : "$owner"
+                        }
+                    }
+                    
+
+                }
+            ]
+        }
+    }
+  ])
+
+  console.log("info mation of watch history  : " ,exuser[0].watchHistory )
+  console.log("info mation of watch history  : " ,exuser[0])
+  console.log("info mation of watch history  : " ,exuser[1])
+  console.log("info mation of watch history  : " ,exuser)
+
+  res.status(200)
+  .json({
+    massage : "watch history fetched successfully.........",
+    user : exuser[0].watchHistory,
+    exuser
+
+
+  })
+
+}
+
+
+
+
 export {
     registeruser,
     logineduser,
@@ -584,6 +748,8 @@ export {
     changePassword,
     currentuser,
     updateAccountDetails,
-    updateUserAvatar
+    updateUserAvatar,
+    getUserChanelProfile,
+    getWatchHistory
 
 }
