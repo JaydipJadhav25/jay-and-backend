@@ -11,7 +11,7 @@ const secretkey ="jaydipdhananjayjadhavJADHAVJAYDIPDHANANJAY";
 
     // const token  = req.cookies?.accesstoken || req.header("Authorization")?.replace("Bearer" , "")
     const token  = req.cookies.accesstoken;
-    console.log("access token in auth middlewaer : " , token )
+    // console.log("access token in auth middlewaer : " , token )
     
     
     if(!token){
@@ -20,19 +20,19 @@ const secretkey ="jaydipdhananjayjadhavJADHAVJAYDIPDHANANJAY";
         })
     }
 
-    console.log("decoded processing.................................",process.env.ACCESS_TOKEN_SECRET)
+    // console.log("decoded processing.................................",process.env.ACCESS_TOKEN_SECRET)
 //    const decodedtoken =   Jwt.verify(token ,JsonWebTokenError.verify(token,secretkey))
 const decodedtoken  = JsonWebTokenError.verify(token, secretkey)
 
 
-   console.log("decoded infromation : " , decodedtoken)
-   console.log("decoding is done and  infromattion : " , decodedtoken)
+  //  console.log("decoded infromation : " , decodedtoken)
+  //  console.log("decoding is done and  infromattion : " , decodedtoken)
 
    const exuser = await user.findById({
     _id :decodedtoken._id
    }).select("-password -refreshtoken")
 
-   console.log("useer chi info : " , exuser)
+  //  console.log("useer chi info : " , exuser)
 
    if(!exuser){
     res.json({
@@ -41,7 +41,7 @@ const decodedtoken  = JsonWebTokenError.verify(token, secretkey)
    }
    req.user = exuser;
 
-   console.log("successfully user injected in user object ................. n dada")
+  //  console.log("successfully user injected in user object ................. n dada")
 
    next();
 
