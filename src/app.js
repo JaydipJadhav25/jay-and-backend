@@ -44,15 +44,16 @@ app.use(cookieParser())
 import userRouter from "./routes/user.routes.js"
 
 
-// impot tweet rounter
+// impot tweet router
 
 import tweetRouter from "./routes/tweet.routes.js"
-
-
+// import video router
+import videoroutet from "./routes/video.routes.js"
 
 ////////////////////////////////////////
 app.use("/api/v1/user", userRouter)
 app.use("/api/v1/tweets" , tweetRouter)
+app.use("/api/v1/video" , videoroutet)
 
 
 
