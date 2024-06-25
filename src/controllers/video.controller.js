@@ -63,6 +63,113 @@ const publishAVideo =async (req, res) => {
 
 }
 
+const getVideoById = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: get video by id
+
+    console.log("videoId : " , videoId)
+    if(videoId === "") return res.json({massage : "video Id Requried."})
+
+     const uservideo = await video.findById(videoId);
+
+     if(!uservideo) return res.json({massage : " Something went wrong get video .."})
+
+
+   return res.json({
+        massage : "getVideo successfully......",
+        uservideo
+    })
+    .status(200)
+
+})
+
+const deleteVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: delete video
+    console.log("videoId : " , videoId)
+    if(videoId === "") return res.json({massage : "video Id Requried."})
+
+   const uservideo =  await video.findByIdAndDelete({_id : videoId})
+
+   if(!uservideo) return res.json({massage : " Something went wrong deleting user video.."})
+
+    return res.json({
+        massage : "Video deleted successfully......",
+      
+    })
+    .status(200)
+})
+
+
+
+const updateVideo = asyncHandler(async (req, res) => {
+    const { videoId } = req.params
+    //TODO: update video details tlelike ti, description, thumbnail
+    const { title , description } = req.body;
+
+    console.log("videoId : " , videoId)
+
+    if(!videoId) return res.json({massage : "video Id Required."})
+
+    console.log("user data : " , title , description);
+
+    if (
+        [title , description].some((field) => field?.trim() === "")
+    ) {
+        return res.json({massage :  "All fields are required"})
+        .status(400)
+    }
+
+    //access thumnail from multer
+
+    const thumbanillocalpath = File.thumbanil.url
+    console.log("local path : " , thumbanillocalpath);
+
+
+    if (!thumbanillocalpath) {
+        return res.json({massage : "thumbanil  file is required"})
+        .status(400);
+
+    }
+
+    // upload 
+
+    const thumbanil = await uploadfileoncloudinary(thumbanillocalpath);
+
+    if (!thumbanil) {
+        return res.json({massage : "Error while uploading  thumnail on cloudinary "})
+        .status(400);
+
+    }
+
+ 
+    const updatevideo = await video.findByIdAndUpdate(videoId,{
+        $set :{
+            title,
+            description,
+            thumbanil : thumbanil.url
+        }
+    },
+{
+    new : true
+})
+
+if (!updatevideo) {
+   return res.json({ massage : "Something went wrong while update video details"})
+}
+
+
+ return res.json({
+    massage : "successfully update video details .. ",
+    updatevideo
+ })
+ .status(202)
+
+
+})
+
+
+
 
 
 
@@ -70,6 +177,9 @@ const publishAVideo =async (req, res) => {
 
 
 export { 
-    publishAVideo
+    publishAVideo,
+    getVideoById ,
+    deleteVideo,
+    updateVideo
     
 }
